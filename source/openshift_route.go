@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/external-dns/source/types"
 
 	"sigs.k8s.io/external-dns/endpoint"
+	"sigs.k8s.io/external-dns/pkg/events"
 	"sigs.k8s.io/external-dns/source/annotations"
 	"sigs.k8s.io/external-dns/source/informers"
 	"sigs.k8s.io/external-dns/source/template"
@@ -72,6 +73,11 @@ func NewOcpRouteSource(
 	// Set resync period to 0, to prevent processing when nothing has changed.
 	informerFactory := extInformers.NewSharedInformerFactoryWithOptions(ocpClient, 0*time.Second, extInformers.WithNamespace(cfg.Namespace))
 	informer := informerFactory.Route().V1().Routes()
+
+	informers.MustSetTransform(informer.Informer(), informers.TransformerWithOptions[*routev1.Route](
+		informers.TransformRemoveManagedFields(),
+		informers.TransformRemoveLastAppliedConfig(),
+	))
 
 	// Add default resource event handlers to properly initialize informer.
 	informers.MustAddEventHandler(informer.Informer(), informers.DefaultEventHandler())
@@ -138,6 +144,8 @@ func (ors *ocpRouteSource) Endpoints(_ context.Context) ([]*endpoint.Endpoint, e
 		if endpoint.HasNoEmptyEndpoints(orEndpoints, types.OpenShiftRoute, ocpRoute) {
 			continue
 		}
+
+		endpoint.AttachRefObject(orEndpoints, events.NewObjectReference(ocpRoute, types.OpenShiftRoute))
 
 		log.Debugf("Endpoints generated from OpenShift Route: %s/%s: %v", ocpRoute.Namespace, ocpRoute.Name, orEndpoints)
 		endpoints = append(endpoints, orEndpoints...)

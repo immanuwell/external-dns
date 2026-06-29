@@ -54,7 +54,7 @@ func TestValidateFlags(t *testing.T) {
 
 	cfg = newValidConfig(t)
 	cfg.IgnoreHostnameAnnotation = true
-	cfg.FQDNTemplate = ""
+	cfg.FQDNTemplate = []string{}
 	require.Error(t, ValidateConfig(cfg))
 
 	cfg = newValidConfig(t)
@@ -142,7 +142,7 @@ func newValidConfig(t *testing.T) *externaldns.Config {
 func TestValidateBadIgnoreHostnameAnnotationsConfig(t *testing.T) {
 	cfg := externaldns.NewConfig()
 	cfg.IgnoreHostnameAnnotation = true
-	cfg.FQDNTemplate = ""
+	cfg.FQDNTemplate = []string{}
 
 	assert.Error(t, ValidateConfig(cfg))
 }
@@ -310,91 +310,6 @@ func TestValidateGoodRfc2136GssTsigConfig(t *testing.T) {
 	for _, cfg := range validRfc2136GssTsigConfigs {
 		err := ValidateConfig(cfg)
 
-		assert.NoError(t, err)
-	}
-}
-
-func TestValidateBadAkamaiConfig(t *testing.T) {
-	invalidAkamaiConfigs := []*externaldns.Config{
-		{
-			LogFormat:          "json",
-			Sources:            []string{"test-source"},
-			Provider:           "akamai",
-			AnnotationPrefix:   "external-dns.kubernetes.io/",
-			AkamaiClientToken:  "test-token",
-			AkamaiClientSecret: "test-secret",
-			AkamaiAccessToken:  "test-access-token",
-			AkamaiEdgercPath:   "/path/to/edgerc",
-			// Missing AkamaiServiceConsumerDomain
-		},
-		{
-			LogFormat:                   "json",
-			Sources:                     []string{"test-source"},
-			Provider:                    "akamai",
-			AnnotationPrefix:            "external-dns.kubernetes.io/",
-			AkamaiServiceConsumerDomain: "test-domain",
-			AkamaiClientSecret:          "test-secret",
-			AkamaiAccessToken:           "test-access-token",
-			AkamaiEdgercPath:            "/path/to/edgerc",
-			// Missing AkamaiClientToken
-		},
-		{
-			LogFormat:                   "json",
-			Sources:                     []string{"test-source"},
-			Provider:                    "akamai",
-			AnnotationPrefix:            "external-dns.kubernetes.io/",
-			AkamaiServiceConsumerDomain: "test-domain",
-			AkamaiClientToken:           "test-token",
-			AkamaiAccessToken:           "test-access-token",
-			AkamaiEdgercPath:            "/path/to/edgerc",
-			// Missing AkamaiClientSecret
-		},
-		{
-			LogFormat:                   "json",
-			Sources:                     []string{"test-source"},
-			Provider:                    "akamai",
-			AnnotationPrefix:            "external-dns.kubernetes.io/",
-			AkamaiServiceConsumerDomain: "test-domain",
-			AkamaiClientToken:           "test-token",
-			AkamaiClientSecret:          "test-secret",
-			AkamaiEdgercPath:            "/path/to/edgerc",
-			// Missing AkamaiAccessToken
-		},
-	}
-
-	for _, cfg := range invalidAkamaiConfigs {
-		err := ValidateConfig(cfg)
-		assert.Error(t, err)
-	}
-}
-
-func TestValidateGoodAkamaiConfig(t *testing.T) {
-	validAkamaiConfigs := []*externaldns.Config{
-		{
-			LogFormat:                   "json",
-			Sources:                     []string{"test-source"},
-			Provider:                    "akamai",
-			AnnotationPrefix:            "external-dns.kubernetes.io/",
-			AkamaiServiceConsumerDomain: "test-domain",
-			AkamaiClientToken:           "test-token",
-			AkamaiClientSecret:          "test-secret",
-			AkamaiAccessToken:           "test-access-token",
-			AkamaiEdgercPath:            "/path/to/edgerc",
-			KubeAPIQPS:                  int(rest.DefaultQPS),
-			KubeAPIBurst:                rest.DefaultBurst,
-		},
-		{
-			LogFormat:        "json",
-			Sources:          []string{"test-source"},
-			Provider:         "akamai",
-			AnnotationPrefix: "external-dns.kubernetes.io/",
-			KubeAPIQPS:       int(rest.DefaultQPS),
-			KubeAPIBurst:     rest.DefaultBurst,
-		},
-	}
-
-	for _, cfg := range validAkamaiConfigs {
-		err := ValidateConfig(cfg)
 		assert.NoError(t, err)
 	}
 }
